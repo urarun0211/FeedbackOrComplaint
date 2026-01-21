@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apni Baat Bataye</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5fdf7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: #1b5e20;
+      margin-bottom: 6px;
+      font-size: 1.6rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #4e4e4e;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #2e7d32;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 14px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .voice-btn {
+      background: #e8f5e9;
+      color: #1b5e20;
+      border: 1px solid #2e7d32;
+    }
+
+    .submit-btn {
+      background: #2e7d32;
+      color: white;
+    }
+
+    .submit-btn:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .success {
+      color: #2e7d32;
+    }
+
+    .error {
+      color: #c62828;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Apni Baat Bataye</h1>
+    <div class="subtitle">Likhiye ya boliye – bas itna hi</div>
+
+    <textarea id="messageInput" placeholder="Yaha apna feedback ya complaint likhiye…"></textarea>
+
+    <div class="buttons">
+      <button class="voice-btn" id="voiceBtn">🎤 Bolkar Likhiye</button>
+      <button class="submit-btn" id="submitBtn">Submit</button>
+    </div>
+
+    <div class="message success" id="successMsg">
+      Dhanyavaad! Aapki baat pahunch gayi.
+    </div>
+
+    <div class="message error" id="errorMsg">
+      Kuch problem hui. Kripya dobara koshish karein.
+    </div>
+  </div>
+
+  <script>
+    // 🔗 PUT YOUR BACKEND API URL HERE
+    const API_URL = "https://YOUR_BACKEND_API_URL_HERE";
+
+    const textarea = document.getElementById("messageInput");
+    const submitBtn = document.getElementById("submitBtn");
+    const voiceBtn = document.getElementById("voiceBtn");
+    const successMsg = document.getElementById("successMsg");
+    const errorMsg = document.getElementById("errorMsg");
+
+    // -------------------------
+    // Voice to Text (Optional)
+    // -------------------------
+    let recognition;
+    if ("webkitSpeechRecognition" in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "hi-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        textarea.value += event.results[0][0].transcript;
+      };
+
+      recognition.onerror = () => {
+        alert("Voice input available nahi hai.");
+      };
+
+      voiceBtn.onclick = () => recognition.start();
+    } else {
+      voiceBtn.style.display = "none";
+    }
+
+    // -------------------------
+    // Submit Handler
+    // -------------------------
+    submitBtn.onclick = async () => {
+      const message = textarea.value.trim();
+
+      successMsg.style.display = "none";
+      errorMsg.style.display = "none";
+
+      if (!message) {
+        errorMsg.textContent = "Kripya kuch likhiye ya boliye.";
+        errorMsg.style.display = "block";
+        return;
+      }
+
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message }),
+        });
+
+        if (!response.ok) throw new Error("Server error");
+
+        textarea.value = "";
+        successMsg.style.display = "block";
+      } catch (err) {
+        errorMsg.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
